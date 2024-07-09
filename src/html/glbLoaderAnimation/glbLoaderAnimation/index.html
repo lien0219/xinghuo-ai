@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>glb文件渲染</title>
+  </head>
+
+  <body>
+    <div id="WebGL-output"></div>
+  </body>
+
+  <script type="module">
+    import * as THREE from './js/three.module.js'
+    import { OrbitControls } from './js/OrbitControls.js'
+    import { GLTFLoader } from './js/GLTFLoader.js'
+    import { RoomEnvironment } from './js/RoomEnvironment.js'
+    import { MeshoptDecoder } from './js/meshopt_decoder.module.js'
+    import { DRACOLoader } from './js/DRACOLoader.js'
+
+    let scene, camera, renderer, control, clock, mixer
+
+    function init() {
+      clock = new THREE.Clock()
+      // 场景，相机
+      scene = new THREE.Scene()
+      scene.background = new THREE.Color(0xbbbbbb)
+      camera = new THREE.PerspectiveCamera(
+        45,
+        window.innerWidth / window.innerHeight,
+        1,
+        2000
+      )
+      camera.position.set(0, 100,100)
+
+      // 渲染器
+      renderer = new THREE.WebGLRenderer()
+      renderer.setSize(window.innerWidth, window.innerHeight)
+      document.body.appendChild(renderer.domElement)
+
+      // 地表格
+      const grid = new THREE.GridHelper(500, 100, 0xffffff, 0xffffff)
+      grid.material.opacity = 0.5
+      grid.material.depthWrite = false
+      grid.material.transparent = true
+      scene.add(grid)
+
+      // 材质
+      const environment = new RoomEnvironment()
+      const pmremGenerator = new THREE.PMREMGenerator(renderer)
+      scene.environment = pmremGenerator.fromScene(environment).texture
+
+      //   灯光
+      scene.add(new THREE.AmbientLight( 0x404040 ))
+
+      const light = new THREE.DirectionalLight( 0xffffff,1)
+      light.position.set(0,20, 0)
+
+      light.castShadow = true
+      light.shadow.camera.top = 10
+      light.shadow.camera.bottom = -10
+      light.shadow.camera.left = -10
+      light.shadow.camera.right = 10
+
+      // light.castShadow = true
+      scene.add(light)
+
+      // 控制器
+      control = new OrbitControls(camera, renderer.domElement)
+
+      const axesHelper = new THREE.AxesHelper(14)
+      scene.add(axesHelper)
+      loader()
+      animate()
+    }
+
+    function loader() {
+      const loader = new GLTFLoader()
+        .setPath('./model/')
+        .setDRACOLoader(new DRACOLoader().setDecoderPath('js/gltf/'))
+
+      loader.load('a-71.glb', function (gltf) {
+        const model=gltf.scene
+        console.log(model,"详情");
+        model.traverse((child)=>{
+          console.log(child,"-----------------");
+        })
+        // gltf.scene.scale.set(80, 80, 80)
+        gltf.scene.scale.set(50, 50, 50)
+        mixer = new THREE.AnimationMixer(gltf.scene)
+        // var axis = new THREE.Vector3(-1.5,0,0);//向量axis
+        // gltf.scene.rotateOnAxis(axis,Math.PI/8);//绕axis轴旋转π/8
+        // gltf.scene.position.set(0,-50,0)
+
+        // console.log(mixer,'-------------')
+        console.log(gltf.animations);
+        // mixer.clipAction(gltf.animations[5]).play()
+        // mixer.clipAction(gltf.animations[6]).play()
+        mixer.clipAction(gltf.animations[6]).play()
+        mixer.timeScale = 2;
+        scene.add(gltf.scene)
+      })
+    }
+
+    function animate() {
+      requestAnimationFrame(animate)
+      if (mixer) mixer.update(clock.getDelta())
+      control.update() 
+      render()
+    }
+
+    function render() {
+      renderer.render(scene, camera)
+      //解决加载gltf格式模型纹理贴图和原图不一样问题
+      renderer.outputEncoding = THREE.sRGBEncoding;
+    }
+    
+
+    init()
+    animate()
+  </script>
+</html>

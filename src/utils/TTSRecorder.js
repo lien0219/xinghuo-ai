@@ -1,8 +1,7 @@
 import CryptoJS from "crypto-js"
-// 可以通过 https://console.xfyun.cn/app/create 创建应用后获取APPID、API_SECRET、API_KEY
-const APPID = ''
-const API_SECRET = ''
-const API_KEY = ''
+const APPID = '5b1137c4'
+const API_SECRET = 'OTMwMjk2MzU0NTRmYTkwODY5YmZlMzEw'
+const API_KEY = '3d6309b34186f3fc850f697589e40afc'
 let total_res = "";
 
 function getWebsocketUrl() {

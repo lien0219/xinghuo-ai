@@ -1,0 +1,110 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据输出测试</title>
+    <style>
+        div{
+            display: inline-block;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="chatOutput"></div>
+    <button id="startButton">开始连接接收消息</button>
+    <script>
+        let webSocket;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const startButton = document.getElementById('startButton');
+            startButton.addEventListener('click', function () {
+                console.log('开始连接接收消息');
+                webSocket = new WebSocket('ws://127.0.0.1:8080/stream'); 
+
+                webSocket.onopen = function () {
+                    console.log("连接打开");
+                };
+
+                webSocket.onmessage = function (event) {
+                    const message = event.data;
+                    console.log('接收数据: ' + message);
+                    const messageElement = document.createElement('div');
+                    messageElement.innerHTML = message;
+                    document.getElementById('chatOutput').appendChild(messageElement);
+                };
+
+                webSocket.onerror = function (event) {
+                    console.error('接收错误:', event);
+                };
+            });
+        });
+    </script>
+</body>
+
+</html> -->
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据输出测试</title>
+    <style>
+        div {
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div id="chatOutput"></div>
+    <input type="text" id="inputText" placeholder="输入内容">
+    <button id="startButton">开始连接接收消息</button>
+    <script>
+        let webSocket;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const startButton = document.getElementById('startButton');
+            const inputText = document.getElementById('inputText');
+
+            startButton.addEventListener('click', function () {
+                const userInput = inputText.value.trim();
+                if (userInput === '') {
+                    alert('请输入内容');
+                    return;
+                }
+
+                console.log('开始连接接收消息');
+                webSocket = new WebSocket('ws://127.0.0.1:8080/stream');
+
+                webSocket.onopen = function () {
+                    console.log("连接打开");
+                    webSocket.send(userInput);
+                };
+
+                webSocket.onmessage = function (event) {
+                    const message = event.data;
+                    console.log('接收数据: ' + message);
+                    const messageElement = document.createElement('div');
+                    messageElement.innerHTML = message;
+                    document.getElementById('chatOutput').appendChild(messageElement);
+                };
+
+                webSocket.onerror = function (event) {
+                    console.error('接收错误:', event);
+                };
+
+                webSocket.onclose = function () {
+                    console.log('连接关闭');
+                };
+            });
+        });
+    </script>
+</body>
+</html>
+
