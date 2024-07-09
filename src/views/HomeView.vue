@@ -2,13 +2,13 @@
   <div class="content">
 
     <div class="message" id='message-box'>
-      <div v-for="(msg,index) in msgList" :key="index" :class="{
-          'user':msg.role === 'user',
-          'assistant':msg.role === 'assistant'
-        }">
+      <div v-for="(msg, index) in msgList" :key="index" :class="{
+        'user': msg.role === 'user',
+        'assistant': msg.role === 'assistant'
+      }">
         <div>
           <div>
-            <img class='role-img' :src="userImg" v-if="msg.role === 'user'"/>
+            <img class='role-img' :src="userImg" v-if="msg.role === 'user'" />
           </div>
           <div class='imgbox' v-if="msg.role === 'assistant'">
             <img class='role-img' :src="aiImg" />
@@ -40,7 +40,7 @@ const msgList = ref([])
 let msgDom = ref(null)
 import { marked } from 'marked'
 
-onMounted(()=>{
+onMounted(() => {
   msgDom.value = document.getElementById("message-box")
   msgList.value = msgStore.list
   scroll()
@@ -48,7 +48,7 @@ onMounted(()=>{
 
 // 滚动到最底部
 const scroll = () => {
-  nextTick(()=>{
+  nextTick(() => {
     msgDom.value.scrollTop = msgDom.value.scrollHeight
   })
 }
@@ -58,21 +58,19 @@ const submitMsg = async () => {
   msgStore.userAddMsg(msgValue.value)
   msgValue.value = ""
   // 开始提问
-  ttsRecorder.start(msgStore,msgDom)
+  ttsRecorder.start(msgStore, msgDom)
   scroll()
 }
 </script>
 
 <style scoped lang="less">
-
-
-.content{
+.content {
   height: 100%;
   position: relative;
 
 
 
-  .message{
+  .message {
     position: absolute;
     top: 0;
     left: 20%;
@@ -81,7 +79,8 @@ const submitMsg = async () => {
     display: flex;
     overflow: auto;
     flex-direction: column;
-    .user{
+
+    .user {
       background-color: #ebf7f8;
       padding: 15px;
       box-sizing: border-box;
@@ -90,7 +89,8 @@ const submitMsg = async () => {
       align-items: flex-end;
       border-bottom: 1px solid #dfdfdf;
     }
-    .assistant{
+
+    .assistant {
       background-color: #f7f7f7;
       padding: 15px;
       box-sizing: border-box;
@@ -98,7 +98,7 @@ const submitMsg = async () => {
     }
   }
 
-  .footer{
+  .footer {
     position: absolute;
     bottom: 50px;
     left: 20%;
@@ -106,10 +106,12 @@ const submitMsg = async () => {
     display: flex;
     align-items: flex-end;
     gap: 15px;
-    .text{
+
+    .text {
       width: 100%;
     }
-    .btn{
+
+    .btn {
       width: 100px;
       height: 40px;
       background-color: #1a60ea;
@@ -119,36 +121,40 @@ const submitMsg = async () => {
   }
 
   @media screen and (max-width: 768px) {
-    .message,.footer {
+
+    .message,
+    .footer {
       left: 0;
       right: 0;
     }
-    .message{
+
+    .message {
       bottom: 100px;
     }
-    .footer{
+
+    .footer {
       bottom: 10px;
     }
   }
 }
 
-.imgbox{
+.imgbox {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 10px;
-  .name{
+
+  .name {
     font-size: 13px;
     color: #fd919e;
     font-weight: 400;
   }
 }
 
-.role-img{
+.role-img {
   width: 40px;
   height: 40px;
   border-radius: 50%;
   overflow: hidden;
 }
-
 </style>

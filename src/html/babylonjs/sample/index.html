@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Babylon.js sample code</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.2/dat.gui.min.js"></script>
+    <script src="https://assets.babylonjs.com/generated/Assets.js"></script>
+    <script src="https://cdn.babylonjs.com/recast.js"></script>
+    <script src="https://cdn.babylonjs.com/ammo.js"></script>
+    <script src="https://cdn.babylonjs.com/havok/HavokPhysics_umd.js"></script>
+    <script src="https://cdn.babylonjs.com/cannon.js"></script>
+    <script src="https://cdn.babylonjs.com/Oimo.js"></script>
+    <script src="https://cdn.babylonjs.com/earcut.min.js"></script>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+    <script src="https://cdn.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
+    <script src="https://cdn.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+    <script src="https://cdn.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
+    <script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
+    <script src="https://cdn.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
+
+    <style>
+        html,
+        body {
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+
+        #canvasZone {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="canvasZone"><canvas id="renderCanvas"></canvas></div>
+    <script>
+        var canvas = document.getElementById("renderCanvas");
+
+
+        var startRenderLoop = function (engine, canvas) {
+            engine.runRenderLoop(function () {
+                if (sceneToRender && sceneToRender.activeCamera) {
+                    sceneToRender.render();
+                }
+            });
+        }
+        var engine = null;
+        var scene = null;
+        var sceneToRender = null;
+        var createDefaultEngine = function () { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, disableWebGL2Support: false }); };
+        var delayCreateScene = function () {
+            engine.enableOfflineSupport = false;
+            // engine.displayLoadingUI();
+            // var scene = new BABYLON.Scene(engine);
+            // 相机
+            // var camera = new BABYLON.ArcRotateCamera("camera1", Math.PI / 2, Math.PI / 4, 3, new BABYLON.Vector3(0,
+            //     1, 0), scene);
+            // camera.attachControl(canvas, true);
+            // camera.lowerRadiusLimit = 2;
+            // camera.upperRadiusLimit = 10;
+            // camera.wheelDeltaPercentage = 0.01;
+            // 灯光
+            // var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
+            // light.intensity = 0.6;
+            // light.specular = BABYLON.Color3.Black();
+            // var light2 = new BABYLON.DirectionalLight("dir01", new BABYLON.Vector3(0, -0.5, -1.0), scene);
+            // light2.position = new BABYLON.Vector3(0, 5, 5);
+            // 阴影
+            // var shadowGenerator = new BABYLON.ShadowGenerator(1024, light2);
+            // shadowGenerator.useBlurExponentialShadowMap = true;
+            // shadowGenerator.blurKernel = 32;
+
+            var scene = new BABYLON.Scene(engine);
+
+            BABYLON.SceneLoader.Append("../model/", "model.glb", scene, function (scene) {
+                scene.createDefaultCameraOrLight(true, true, true);
+                scene.activeCamera.alpha += Math.PI;
+
+                // 假设模型是场景中的第一个网格
+                var modelMesh = scene.meshes[0];
+
+
+                modelMesh.position = new BABYLON.Vector3(0, 0, 0);
+                modelMesh.rotate(BABYLON.Axis.X, 25 * (Math.PI / 18), BABYLON.Space.LOCAL);
+
+
+                var idleAnim = scene.animationGroups.find(a =>console.log(a.name));
+                // var idleParam = {
+                //     name: "Idle",
+                //     anim: idleAnim,
+                //     weight: 1
+                // };
+                // idleAnim.play(true);
+                // idleAnim.setWeightForAllAnimatables(1);
+
+
+             
+            });
+
+            return scene;
+        };
+        window.initFunction = async function () {
+            var asyncEngineCreation = async function () {
+                try {
+                    return createDefaultEngine();
+                } catch (e) {
+                    console.log("可用的createEngine函数失败。创建默认引擎");
+                    return createDefaultEngine();
+                }
+            }
+            window.engine = await asyncEngineCreation();
+            if (!engine) throw 'engine should not be null.';
+
+            startRenderLoop(engine, canvas);
+            window.scene = delayCreateScene();
+        };
+        initFunction().then(() => {
+            sceneToRender = scene
+        });
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+    </script>
+</body>
+
+</html>
