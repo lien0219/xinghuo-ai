@@ -3,7 +3,7 @@
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Babylon.js sample code</title>
+    <title>Babylon.js</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.2/dat.gui.min.js"></script>
     <script src="https://assets.babylonjs.com/generated/Assets.js"></script>
     <script src="https://cdn.babylonjs.com/recast.js"></script>
@@ -45,94 +45,138 @@
 </head>
 
 <body>
-    <div id="canvasZone"><canvas id="renderCanvas"></canvas></div>
+    <div id="canvasZone" style="width: 100%;height: 80%;"><canvas id="renderCanvas"></canvas></div>
+    <button onclick="playAnimationByName('All Animations')">播放 All Animations</button>
+    <button onclick="stopAnimationByName('All Animations')">停止 All Animations</button>
     <script>
+        // 场景
         var canvas = document.getElementById("renderCanvas");
+        var engine = new BABYLON.Engine(canvas, true);
+        var scene = new BABYLON.Scene(engine);
+        scene.clearColor = new BABYLON.Color4(1, 1, 1, 1);
+
+        // 相机
+        var camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2, 5, new BABYLON.Vector3(0, 1, 0), scene);
+        camera.attachControl(canvas, true);
+        // 限制alpha（水平旋转角度）
+        camera.lowerAlphaLimit = null; // 不限制
+        camera.upperAlphaLimit = null; // 不限制
+
+        // 限制beta（垂直旋转角度）
+        camera.lowerBetaLimit = 0.1; // 设置最低仰角
+        camera.upperBetaLimit = Math.PI - 0.1; // 设置最高仰角
+
+         // 允许无限制放大缩小
+         camera.lowerRadiusLimit = null; // 不限制最小半径
+        camera.upperRadiusLimit = null; // 不限制最大半径
+
+        // 设置缩放速度
+        camera.wheelPrecision = 50; // 数值越大，缩放速度越慢
+
+        // 设置相机惯性
+        camera.inertia = 0.9; // 调整相机惯性，以使其更平滑
+
+        // 添加半球光（环境光）
+        var hemisphericLight = new BABYLON.HemisphericLight("hemisphericLight", new BABYLON.Vector3(0, 1, 0), scene);
+        hemisphericLight.intensity = 1.2; // 增加环境光强度
+
+        // 添加定向光（模拟太阳光）
+        var directionalLight = new BABYLON.DirectionalLight("directionalLight", new BABYLON.Vector3(-1, -2, -1), scene);
+        directionalLight.position = new BABYLON.Vector3(20, 40, 20); // 设置光源位置
+        directionalLight.intensity = 2.0; // 增加太阳光强度
+        directionalLight.shadowEnabled = true; // 启用阴影
+
+        // 添加点光源
+        var pointLight = new BABYLON.PointLight("pointLight", new BABYLON.Vector3(0, 10, 0), scene);
+        pointLight.intensity = 1.0;
+        pointLight.range = 50; // 设置光源范围
+
+        // 环境光贴图
+        // var hdrTexture = new BABYLON.CubeTexture.CreateFromPrefilteredData("https://playground.babylonjs.com/textures/environment.dds", scene);
+        // scene.environmentTexture = hdrTexture;
+        // scene.createDefaultSkybox(hdrTexture, true, 1000);
+
+        const rootUrl = "../model/";
+        const fileName = "a-4.glb";
+
+        // 预加载模型
+        var assetsManager = new BABYLON.AssetsManager(scene);
+        var meshTask = assetsManager.addMeshTask("model task", "", rootUrl, fileName);
+        meshTask.onSuccess = function (task) {
+
+            console.log(scene.animationGroups, "骨骼动画组");
+            console.log(scene.meshes, "模型");
+            console.log(scene.materials, "材质");
+            console.log(scene.lights, "灯光");
+            console.log(scene.cameras, "相机")
+
+            scene.animationGroups.forEach(animationGroup => {
+                animationGroup.stop();
+            });
 
 
-        var startRenderLoop = function (engine, canvas) {
+            // 调整模型材质属性
+            scene.meshes.forEach(mesh => {
+                if (mesh.material) {
+                    // 如果是PBR材质
+                    if (mesh.material instanceof BABYLON.PBRMaterial) {
+                        mesh.material.albedoColor = new BABYLON.Color3(1, 1, 1);  // 反照率颜色
+                        mesh.material.metallic = 1;  // 金属度
+                        mesh.material.roughness = 1;  // 粗糙度
+                    } else {
+                        mesh.material.diffuseColor = new BABYLON.Color3(1, 1, 1); // 漫反射颜色
+                        mesh.material.specularColor = new BABYLON.Color3(1, 1, 1); // 高光颜色
+                    }
+                }
+            });
+
+            task.loadedMeshes.forEach(function (mesh) {
+                // mesh.scaling = new BABYLON.Vector3(1, 1, 1);
+            });
+
+            var axesViewer = new BABYLON.AxesViewer(scene, 2);
+        };
+
+        meshTask.onError = function (task, message, exception) {
+            console.error("模型加载失败: " + message);
+            alert("无法加载模型，请稍后重试。");
+        };
+
+        assetsManager.onProgress = function (tasksRemainingCount, totalTasksCount, task) {
+            var percentComplete = ((totalTasksCount - tasksRemainingCount) / totalTasksCount * 100).toFixed();
+            console.log("模型加载进度: " + percentComplete + "%");
+        };
+
+        assetsManager.onFinish = function (tasks) {
+            console.log("所有资源加载完成");
             engine.runRenderLoop(function () {
-                if (sceneToRender && sceneToRender.activeCamera) {
-                    sceneToRender.render();
-                }
+                scene.render();
             });
-        }
-        var engine = null;
-        var scene = null;
-        var sceneToRender = null;
-        var createDefaultEngine = function () { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, disableWebGL2Support: false }); };
-        var delayCreateScene = function () {
-            engine.enableOfflineSupport = false;
-            // engine.displayLoadingUI();
-            // var scene = new BABYLON.Scene(engine);
-            // 相机
-            // var camera = new BABYLON.ArcRotateCamera("camera1", Math.PI / 2, Math.PI / 4, 3, new BABYLON.Vector3(0,
-            //     1, 0), scene);
-            // camera.attachControl(canvas, true);
-            // camera.lowerRadiusLimit = 2;
-            // camera.upperRadiusLimit = 10;
-            // camera.wheelDeltaPercentage = 0.01;
-            // 灯光
-            // var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
-            // light.intensity = 0.6;
-            // light.specular = BABYLON.Color3.Black();
-            // var light2 = new BABYLON.DirectionalLight("dir01", new BABYLON.Vector3(0, -0.5, -1.0), scene);
-            // light2.position = new BABYLON.Vector3(0, 5, 5);
-            // 阴影
-            // var shadowGenerator = new BABYLON.ShadowGenerator(1024, light2);
-            // shadowGenerator.useBlurExponentialShadowMap = true;
-            // shadowGenerator.blurKernel = 32;
-
-            var scene = new BABYLON.Scene(engine);
-
-            BABYLON.SceneLoader.Append("../model/", "model.glb", scene, function (scene) {
-                scene.createDefaultCameraOrLight(true, true, true);
-                scene.activeCamera.alpha += Math.PI;
-
-                // 假设模型是场景中的第一个网格
-                var modelMesh = scene.meshes[0];
-
-
-                modelMesh.position = new BABYLON.Vector3(0, 0, 0);
-                modelMesh.rotate(BABYLON.Axis.X, 25 * (Math.PI / 18), BABYLON.Space.LOCAL);
-
-
-                var idleAnim = scene.animationGroups.find(a =>console.log(a.name));
-                // var idleParam = {
-                //     name: "Idle",
-                //     anim: idleAnim,
-                //     weight: 1
-                // };
-                // idleAnim.play(true);
-                // idleAnim.setWeightForAllAnimatables(1);
-
-
-             
-            });
-
-            return scene;
         };
-        window.initFunction = async function () {
-            var asyncEngineCreation = async function () {
-                try {
-                    return createDefaultEngine();
-                } catch (e) {
-                    console.log("可用的createEngine函数失败。创建默认引擎");
-                    return createDefaultEngine();
-                }
-            }
-            window.engine = await asyncEngineCreation();
-            if (!engine) throw 'engine should not be null.';
 
-            startRenderLoop(engine, canvas);
-            window.scene = delayCreateScene();
-        };
-        initFunction().then(() => {
-            sceneToRender = scene
-        });
+        assetsManager.load();
+
         window.addEventListener("resize", function () {
             engine.resize();
         });
+
+        function playAnimationByName(name) {
+            const animationGroup = scene.animationGroups.find(group => group.name === name);
+            if (animationGroup) {
+                animationGroup.start(true);
+            } else {
+                console.error(`没有找到名字为${name}的骨骼动画`);
+            }
+        }
+
+        function stopAnimationByName(name) {
+            const animationGroup = scene.animationGroups.find(group => group.name === name);
+            if (animationGroup) {
+                animationGroup.stop();
+            } else {
+                console.error(`没有找到名字为${name}的骨骼动画`);
+            }
+        }
     </script>
 </body>
 

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>数据输出测试</title>
     <style>
-        div{
+        div {
             display: inline-block;
         }
     </style>
@@ -22,7 +22,13 @@
             const startButton = document.getElementById('startButton');
             startButton.addEventListener('click', function () {
                 console.log('开始连接接收消息');
-                webSocket = new WebSocket('ws://127.0.0.1:8080/stream'); 
+                // const params = {
+                //     text: "你好啊",
+                //     username: "xc"
+
+                // }
+                // axios.post("http://10.177.54.214:10086/api/process-text", params, { signal })
+                webSocket = new WebSocket('ws://127.0.0.1:8080/stream');
 
                 webSocket.onopen = function () {
                     console.log("连接打开");
@@ -51,6 +57,7 @@
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -61,6 +68,7 @@
         }
     </style>
 </head>
+
 <body>
     <div id="chatOutput"></div>
     <input type="text" id="inputText" placeholder="输入内容">
@@ -106,5 +114,5 @@
         });
     </script>
 </body>
-</html>
 
+</html>

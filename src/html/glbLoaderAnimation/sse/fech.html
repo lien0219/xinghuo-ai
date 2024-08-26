@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sse</title>
+</head>
+
+<body>
+    <script>
+
+        const url = "http://localhost:3000";
+        async function getResponse(content) {
+            const resp = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ content }),
+                // mode: 'no-cors'
+            })
+            // const txt=await resp.text()
+            // console.log(txt);
+            if (!resp.ok) {
+                throw new Error(`HTTP error status: ${resp.status}`);
+            }
+
+            const reader = resp.body.getReader()
+            const decoder = new TextDecoder()
+
+            let totalData = '';
+
+            while (1) {
+                const { done, value } = await reader.read()
+                if (done) {
+                    break
+                }
+                const txt = decoder.decode(value)
+
+                totalData += decoder.decode(value, { stream: true });
+
+                console.log(done, totalData);
+            }
+            console.log("读完了");
+
+        }
+        getResponse("庆历四年的春天")
+    </script>
+</body>
+
+</html>
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SSE Client</title>
+</head>
+<body>
+  <h1>Server-Sent Events Demo</h1>
+  <div id="data"></div>
+
+  <script>
+    const eventSource = new EventSource('http://localhost:3000');
+    eventSource.onmessage = function(event) {
+      const data = JSON.parse(event.data);
+      document.getElementById('data').innerHTML += `<p>${data.time}: ${data.message}</p>`;
+    };
+    eventSource.onerror = function(event) {
+      console.error('EventSource failed:', event);
+      eventSource.close();
+    };
+  </script>
+</body>
+</html> -->
